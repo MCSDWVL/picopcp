@@ -9,6 +9,9 @@ function create_actor(x, y, spr, frames, dx, dy, damping)
   a={}
   a.x = x
   a.y = y
+  a.w = 5
+  a.h = 5
+  a.c=6
   a.spr = spr
   a.frame = 0
   a.frames = frames
@@ -24,7 +27,21 @@ end
 function draw_actor(a)
   -- todo: draw sprite
   -- spr(a.spr + a.frame, sx, sy)
-  circfill(a.x,a.y,3,spr)
+  circfill(a.x,a.y,a.w,a.c)
+end
+
+function collide()
+ for a in all(actors) do
+  if (a ~= pl) then
+  	local x=pl.x - a.x
+  	local y=pl.y - a.y
+  	if ((abs(x) < pl.w+a.w) and
+  	   (abs(y) < pl.h+a.h))
+  	then
+  	 return true
+  	end
+  end
+ end
 end
 
 function update_player(a)
@@ -32,6 +49,11 @@ function update_player(a)
   if (btn(1)) then a.dx+=player_movespeed end
   if (btn(2)) then a.dy-=player_movespeed end
   if (btn(3)) then a.dy+=player_movespeed end
+  if (collide()) then 
+   a.c=9
+  else
+  	a.c=0
+  end
 end
 
 function apply_movement(a)
@@ -376,3 +398,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
