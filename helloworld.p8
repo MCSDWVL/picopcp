@@ -94,7 +94,15 @@ actor_prefabs = {
     is_innocent=true,
     init = function(a)
       -- randomize horizontal movement
-      a.dx = 1 - rnd(2)
+      a.dx = 2 - rnd(4)
+    end,
+    update = function(a)
+      -- fire lasers randomly?
+      local laser_chance = 0.01
+      local roll = rnd(1)
+      if roll <= laser_chance then
+        create_actor(a.x,a.y,actor_prefabs.laser)
+      end
     end
   },
   star = {
@@ -166,6 +174,30 @@ actor_prefabs = {
       end
     end
   },
+  laser = {
+    damping=1,
+    dx=0,
+    dy=0,
+    frames = {},
+    frametime=5,
+    init = function(a)
+      -- aim towards the player with normalized speed
+      a.dx = pl.x - a.x
+      a.dy = pl.y - a.y
+
+      -- normalized speed
+      local desired_speed = 2
+      local magnitude = sqrt(a.dx*a.dx + a.dy*a.dy)
+      a.dx /= magnitude / desired_speed
+      a.dy /= magnitude / desired_speed
+    end,
+    draw = function(a)
+      local exagerate_length = 3
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, 8)
+    end,
+    w = 1,
+    h = 1,
+  },
 }
 
 -- level stuff
@@ -178,7 +210,8 @@ levels = {
       actor_prefabs.small_meteor,
       actor_prefabs.medium_meteor,
       actor_prefabs.big_meteor,
-      actor_prefabs.shooting_star
+      actor_prefabs.shooting_star,
+      actor_prefabs.star,
     },
     bg = 0,
   }
@@ -218,7 +251,9 @@ end
 
 -- draw an actor
 function draw_actor(a)
-  if (#a.frames >= 0) then
+  if (a.draw ~= nil) then
+    a.draw(a)
+  elseif (#a.frames >= 0) then
     spr(a.frames[1+a.frame_idx], a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
   else
     circfill(a.x,a.y,3,spr)
