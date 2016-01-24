@@ -66,6 +66,7 @@ actor_prefabs = {
    h=5,
    is_innocent=true
  },
+
  -- enemies - ocean
 
   -- special actors
@@ -82,7 +83,7 @@ actor_prefabs = {
     w=8,
     h=3,
     update=function(a)
-      if (not a.fired and a.y <= pl.y) then
+      if (not a.fired and a.y <= pl.y and (pl.x > a.x == a.owner.facing_right)) then
         -- fire!
         a.fired = true
         if (pl.x < a.x) then
