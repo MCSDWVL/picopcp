@@ -22,8 +22,8 @@ actor_prefabs = {
     dy=0,
     frametime=5,
     w=5,
-    h=5,
     health=3,
+    h=8
   },
 
   -- enemies - heaven
@@ -86,7 +86,7 @@ actor_prefabs = {
       elseif (not a.fired) then
         -- stick to the cherub
         a.x = a.owner.x
-        a.y = a.owner.y
+        a.y = a.owner.y+6
         a.facing_right = a.owner.facing_right
       end
     end
@@ -136,10 +136,10 @@ end
 function collide()
  for a in all(actors) do
   if (a ~= pl) then
-  	local x=pl.x - a.x
-  	local y=pl.y - a.y
-  	if ((abs(x) < pl.w+a.w) and
-  	   (abs(y) < pl.h+a.h))
+  	if not ((pl.x+pl.w < a.x) or
+  	   (a.x+a.w < pl.x) or
+  	   (pl.y+pl.h < a.y) or
+  	   (a.y+a.h < pl.y))
   	then
   	 return true
   	end
@@ -205,7 +205,7 @@ function apply_movement(a)
   end
 end
 
--- Is an actor sufficiently out of the placespace that they need deletion?
+-- is an actor sufficiently out of the placespace that they need deletion?
 function is_out_of_bounds(a)
   local tolerance = 10
   return a.y < -tolerance or a.y > 127+tolerance or a.x < -tolerance or a.y > 127+tolerance
@@ -301,7 +301,7 @@ function _draw()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
-    print("GAME OVER", 50,50,1)
+    print("game over", 50,50,1)
   end
 end
 
@@ -600,3 +600,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
