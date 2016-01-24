@@ -409,11 +409,13 @@ levels = {
       pl.frames = {4,5}
       bubbles={}
       -- bubbles
-      while #bubbles < 5 do
+      while #bubbles < 10 do
         add(bubbles, {
           x=flr(rnd(127)),
           y=flr(rnd(127)),
-          v=rnd(2),
+          v=.25+rnd(1),
+          t=0,
+          offset=rnd(3),
           radius=rnd(3),
         })
       end
@@ -426,10 +428,11 @@ levels = {
       foreach(bubbles, self.draw_bubble)
     end,
     draw_bubble = function(bubble)
-      circfill(bubble.x, bubble.y, bubble.radius, 13)
+      circfill(bubble.x + sin(bubble.t/50)*bubble.offset, bubble.y, bubble.radius, 13)
     end,
     update_bubble = function(bubble)
       bubble.y-=bubble.v
+      bubble.t += 1
       if bubble.y < 0 then
         bubble.y=128
         bubble.x=flr(rnd(127))
