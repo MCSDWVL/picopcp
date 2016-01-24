@@ -15,11 +15,9 @@ frames_til_next_enemy = 30
 -- table with settings for a given actor
 actor_prefabs = {
   player = {
-    spr=0,
     spr_w=1,
     spr_h=1,
-    frame=0,
-    frames=2,
+    frames={0,1},
     damping=.75,
     dx=0,
     dy=0,
@@ -30,11 +28,9 @@ actor_prefabs = {
 
   -- enemies - heaven
   cherub = {
-    spr=20,
     spr_w=2,
     spr_h=2,
-    frame=0,
-    frames=1,
+    frames={20},
     damping=1,
     dx=0,
     dy=-2,
@@ -53,11 +49,9 @@ actor_prefabs = {
 
   -- enemies - sky
   bird = {
-   spr=7,
    spr_w=1,
    spr_h=1,
-   frame=0,
-   frames=2,
+   frames={7,8},
    damping=1,
    dx=0,
    dy=-2,
@@ -71,11 +65,9 @@ actor_prefabs = {
 
   -- special actors
   arrow = {
-    spr=52,
     spr_w=1,
     spr_h=1,
-    frame=0,
-    frames=1,
+    frames={52},
     damping=1,
     dx=0,
     dy=0,
@@ -117,7 +109,7 @@ function create_actor(x, y, prefab)
   -- some fields are not initialized from the prefab
   a.x = x
   a.y = y
-  a.frame = 0
+  a.frame_idx = 0
   a.updates_this_frame = 0
   a.facing_right = false
 
@@ -134,8 +126,9 @@ end
 
 -- draw an actor
 function draw_actor(a)
-  if (a.spr >= 0) then
-    spr(a.spr + a.frame, a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
+  if (#a.frames >= 0) then
+    spr(a.frames[1+a.frame_idx], a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
+
   else
     circfill(a.x,a.y,3,spr)
   end
@@ -249,7 +242,7 @@ function actor_update(a)
   a.updates_this_frame += 1
   if (a.updates_this_frame > a.frametime) then
     a.updates_this_frame = 0
-    a.frame = (a.frame + 1) % a.frames
+    a.frame_idx = (a.frame_idx + 1) % #a.frames
   end
 end
 
@@ -292,8 +285,6 @@ function _draw()
   else
     rectfill(0,0,127,127,12)
   end
-  print(frames_til_next_enemy, 50,50, 3)
-  print(#actors, 70,70,2)
   foreach(actors,draw_actor)
 end
 
