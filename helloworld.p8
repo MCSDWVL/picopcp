@@ -3,51 +3,96 @@ version 5
 __lua__
 actors={}
 
--- Player constants.
+-- player constants.
 player_acceleration = .3
 player_max_speed = 3
 pl = nil
 
--- Other tuning parameters... These might need to split to be per level?
+-- other tuning parameters... these might need to split to be per level?
 frames_til_next_enemy = 30
 
--- Table with settings for a given actor
+-- cherub has a special init function to set up the arrow
+function cherub_init(a,prefab)
+
+end
+
+-- table with settings for a given actor
 actor_prefabs = {
   player = {spr=0,frame=0,frames=2,damping=.75,dx=0,dy=0,frametime=5,w=5,h=5},
 
-  -- Enemies - heaven
-  -- Enemies - sky
-  bird = {spr=7,frame=0,frames=2,damping=1,dx=0,dy=-2,frametime=1,w=5,h=5}
-  -- Enemies - ocean
+  -- enemies - heaven
+  cherub = {
+    spr=-1,
+    frame=0,
+    frames=2,
+    damping=1,
+    dx=0,
+    dy=-2,
+    frametime=5,
+    w=5,
+    h=5,
+    init = function(a)
+      local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
+      arrow.owner = a
+    end,
+  },
+
+  -- enemies - sky
+  bird = {spr=7,frame=0,frames=2,damping=1,dx=0,dy=-2,frametime=1,w=5,h=5},
+  -- enemies - ocean
+
+  -- special actors
+  arrow = {
+    spr=-1,frame=0,frames=2,damping=1,dx=0,dy=0,frametime=5,w=5,h=5,
+    update=function(a)
+      if (not a.fired and a.y <= pl.y) then
+        -- fire!
+        a.fired = true
+        if (pl.x < a.x) then
+          a.dx = -1
+        else
+          a.dx = 1
+        end
+      elseif (not a.fired) then
+        -- stick to the cherub
+        a.x = a.owner.x
+        a.y = a.owner.y
+      end
+    end
+  },
 }
 
--- Create an actor from a prefab
-function create_actor(x,y,prefab)
-  return create_actor_from_stats(x,y,prefab.spr,prefab.frames,prefab.dx,prefab.dy,prefab.damping,prefab.frametime,prefab.w,prefab.h)
+-- create a shallow copy of a prefab
+function clone(prefab)
+  local copy = {}
+  for k,v in pairs(prefab) do
+    copy[k] = v
+  end
+  return copy
 end
 
--- Create an actor from a set of parameters
-function create_actor_from_stats(x, y, spr, frames, dx, dy, damping, frametime, w, h)
-  a={}
+-- create an actor from a prefab
+function create_actor(x, y, prefab)
+  a = clone(prefab)
+
+  -- some fields are not initialized from the prefab
   a.x = x
   a.y = y
-  a.spr = spr
   a.frame = 0
-  a.frames = frames
-  a.dx = dx
-  a.dy = dy
-  a.damping = damping
-  a.frametime = frametime
   a.updates_this_frame = 0
-  a.w = w
-  a.h = h
 
+  -- add to the list of actors and return a reference to it.
   add(actors,a)
+
+  -- some prefabs have a custom initializer
+  if (a.init) then
+    a.init(a)
+  end
 
   return a
 end
 
--- Draw an actor
+-- draw an actor
 function draw_actor(a)
   if (a.spr >= 0) then
     spr(a.spr + a.frame, a.x, a.y)
@@ -70,7 +115,7 @@ function collide()
  end
 end
 
--- Update the players movement force
+-- update the players movement force
 colliding = false
 function update_player(a)
   accel={dx=0,dy=0}
@@ -99,11 +144,11 @@ function update_player(a)
     a.dy /= speed_mag / player_max_speed
   end
 
-  -- Check for collision with obstacles/powerups?
+  -- check for collision with obstacles/powerups?
   colliding = collide()
 end
 
--- Update the position of an actor based on their dx/dy
+-- update the position of an actor based on their dx/dy
 function apply_movement(a)
   a.x += a.dx
   a.y += a.dy
@@ -118,25 +163,33 @@ function apply_movement(a)
   end
 end
 
--- Countdown to adding an enemy
+-- countdown to adding an enemy
 function update_frames_til_next_enemy()
   frames_til_next_enemy -= 1
   if (frames_til_next_enemy <= 0) then
     x = flr(rnd(127))
     y = 130
-    create_actor(x, y, actor_prefabs.bird)
+    create_actor(x, y, actor_prefabs.cherub)
     frames_til_next_enemy = 30
   end
 end
 
--- Called once at the start on run
+-- called once at the start on run
 function _init()
-  -- Create the player
+  -- create the player
   pl = create_actor(70, 90, actor_prefabs.player)
 end
 
 function actor_update(a)
+  -- behavior update
+  if (a.update ~= nil) then
+    a.update(a)
+  end
+
+  -- movement update
   apply_movement(a)
+
+  -- animation update
   a.updates_this_frame += 1
   if (a.updates_this_frame > a.frametime) then
     a.updates_this_frame = 0
@@ -144,7 +197,7 @@ function actor_update(a)
   end
 end
 
--- Called once every frame
+-- called once every frame
 function _update()
   -- player movement
   update_player(pl)
@@ -156,7 +209,7 @@ function _update()
   update_frames_til_next_enemy()
 end
 
--- Called approximately once per frame.
+-- called approximately once per frame.
 function _draw()
   if (colliding) then
     rectfill(0,0,127,127,9)
