@@ -171,7 +171,17 @@ actor_prefabs = {
 -- level stuff
 level_time_frames = 60 * 45 -- 60 frames per second, 45 seconds
 levels = {
-  heaven = {},
+  heaven = {
+   draw_bg=function()
+    rectfill(0,0,127,127,12)
+    rectfill(20,0,107,127,13)
+    rectfill(50,0,77,127,6)
+    rect(23,-1,105,128,12)
+   end,
+   spawns = {
+    actor_prefabs.cherub
+    }
+  },
   space = {
     spawns = {
       actor_prefabs.small_alien,
@@ -180,7 +190,35 @@ levels = {
       actor_prefabs.big_meteor,
       actor_prefabs.shooting_star
     },
-    bg = 0,
+    init = function()
+     stars={}
+    	while #stars < 50 do
+    		add(stars, {
+    			x=flr(rnd(127)),
+    			y=flr(rnd(127)),
+    			c=7,
+    			v=rnd(2)
+    			}
+    		)
+    	end
+    end,
+    update = function(self)
+    	foreach(stars,self.update_star)
+    end,
+    draw_bg = function(self)
+    	rectfill(0,0,127,127,0)
+    	foreach(stars, self.draw_star)
+    end,
+    draw_star = function(star)
+    	pset(star.x,star.y,star.c)
+    end,
+    update_star = function(star)
+     star.y-=star.v
+     if star.y < 0 then 
+     	star.y=128
+     	star.x=flr(rnd(127)) 
+     end
+    end  	
   }
 }
 current_level = levels.space
@@ -319,6 +357,7 @@ end
 function _init()
   -- create the player
   pl = create_actor(70, 90, actor_prefabs.player)
+  current_level.init()
 end
 
 function actor_update(a)
@@ -340,6 +379,7 @@ end
 
 -- called once every frame
 function _update()
+		current_level.update(current_level)
   -- player movement
   update_player(pl)
 
@@ -384,10 +424,10 @@ end
 
 -- called approximately once per frame.
 function _draw()
+  current_level.draw_bg(current_level)
+	
   if (colliding) then
     rectfill(0,0,127,127,9)
-  else
-    rectfill(0,0,127,127,current_level.bg)
   end
   foreach(actors,draw_actor)
   draw_health()
