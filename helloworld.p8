@@ -21,6 +21,11 @@ function normalize(x,y,scale)
   return {x=scale*x/magnitude,y=scale*y/magnitude}
 end
 
+function normalized_to_player_vector(a, scale)
+  local to_pl_x = pl.x - a.x
+  local to_pl_y = pl.y - a.y
+  return normalize(to_pl_x, to_pl_y, scale)
+end
 -- table with settings for a given actor
 actor_prefabs = {
   player = {
@@ -175,8 +180,6 @@ actor_prefabs = {
    frametime=1,
    w=5,
    h=5,
-   is_innocent=true,
-   purity = 100,
    frames_since_moved = 0,
    update = function(a)
      a.frames_since_moved += 1
@@ -184,9 +187,7 @@ actor_prefabs = {
        a.frames_since_moved = 0
        -- jump towards the player
        local jelly_speed = 3
-       local toward_player_x = pl.x - a.x
-       local toward_player_y = pl.y - a.y
-       local target_vec = normalize(toward_player_x, toward_player_y, jelly_speed)
+       local target_vec = normalized_to_player_vector(a,jelly_speed)
        a.dx = target_vec.x
        a.dy = target_vec.y
      end
@@ -202,6 +203,28 @@ actor_prefabs = {
  fish = {
  },
  shark = {
+   spr_w=1,
+   spr_h=1,
+   frames={66,67},
+   damping=0,
+   dx=0,
+   dy=0,
+   frametime=1,
+   w=5,
+   h=5,
+   update = function(a)
+     -- move towards the player directly
+     shark_speed = 1
+     local target_vec = normalized_to_player_vector(a,shark_speed)
+     a.dx = target_vec.x
+     a.dy = target_vec.y
+
+     -- if above the player, act as if the current is too strong to go down
+     if a.y < pl.y then
+       -- slowly drift upwards
+       a.dy = -0.3
+     end
+   end,
  },
 
  -- special actors
@@ -316,6 +339,7 @@ levels = {
   ocean = {
     spawns = {
       actor_prefabs.jellyfish,
+      actor_prefabs.shark,
     },
     init = function() end,
     update = function() end,
