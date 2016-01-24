@@ -7,6 +7,7 @@ actors={}
 player_acceleration = .3
 player_max_speed = 3
 pl = nil
+score = 0
 
 -- other tuning parameters... these might need to split to be per level?
 frames_til_next_enemy = 30
@@ -91,10 +92,17 @@ actor_prefabs = {
     frametime=10,
     w=5,
     h=5,
-    is_innocent=true,
     init = function(a)
       -- randomize horizontal movement
-      a.dx = 1 - rnd(2)
+      a.dx = 2 - rnd(4)
+    end,
+    update = function(a)
+      -- fire lasers randomly?
+      local laser_chance = 0.01
+      local roll = rnd(1)
+      if roll <= laser_chance then
+        create_actor(a.x,a.y,actor_prefabs.laser)
+      end
     end
   },
   star = {
@@ -107,7 +115,8 @@ actor_prefabs = {
     dx = 0,
     dy = -1,
     frametime=1,
-    is_innocent=true
+    is_innocent=true,
+    purity=100,
   },
   shooting_star = {
     spr_w=1,
@@ -119,7 +128,16 @@ actor_prefabs = {
     dx = 0,
     dy = -1,
     frametime=1,
-    is_innocent=true
+    is_innocent=true,
+    purity=1000,
+    init = function(a)
+      -- start off the top of the screen
+      a.y = -5
+
+      -- movement down and sideways
+      a.dy = 3
+      a.dx = 4-rnd(8)
+    end,
   },
 
   -- enemies - sky
@@ -133,9 +151,9 @@ actor_prefabs = {
    frametime=1,
    w=5,
    h=5,
-   is_innocent=true
+   is_innocent=true,
+   purity = 100,
  },
-
  -- enemies - ocean
 
   -- special actors
@@ -166,6 +184,30 @@ actor_prefabs = {
       end
     end
   },
+  laser = {
+    damping=1,
+    dx=0,
+    dy=0,
+    frames = {},
+    frametime=5,
+    init = function(a)
+      -- aim towards the player with normalized speed
+      a.dx = pl.x - a.x
+      a.dy = pl.y - a.y
+
+      -- normalized speed
+      local desired_speed = 2
+      local magnitude = sqrt(a.dx*a.dx + a.dy*a.dy)
+      a.dx /= magnitude / desired_speed
+      a.dy /= magnitude / desired_speed
+    end,
+    draw = function(a)
+      local exagerate_length = 3
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, 8)
+    end,
+    w = 1,
+    h = 1,
+  },
 }
 
 -- level stuff
@@ -190,7 +232,8 @@ levels = {
       actor_prefabs.small_meteor,
       actor_prefabs.medium_meteor,
       actor_prefabs.big_meteor,
-      actor_prefabs.shooting_star
+      actor_prefabs.shooting_star,
+      actor_prefabs.star,
     },
     init = function()
      stars={}
@@ -216,11 +259,11 @@ levels = {
     end,
     update_star = function(star)
      star.y-=star.v
-     if star.y < 0 then 
+     if star.y < 0 then
      	star.y=128
-     	star.x=flr(rnd(127)) 
+     	star.x=flr(rnd(127))
      end
-    end  	
+    end
   }
 }
 current_level = levels.heaven
@@ -258,7 +301,9 @@ end
 
 -- draw an actor
 function draw_actor(a)
-  if (#a.frames >= 0) then
+  if (a.draw ~= nil) then
+    a.draw(a)
+  elseif (#a.frames >= 0) then
     spr(a.frames[1+a.frame_idx], a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
   else
     circfill(a.x,a.y,3,spr)
@@ -273,14 +318,17 @@ function collide()
   	   (pl.y+pl.h < a.y) or
   	   (a.y+a.h < pl.y))
   	then
-  	 return true
-  	end
+      -- return the actor we collide with so we can decide what to do with it.
+    return a
+   end
   end
  end
+  -- didn't collide with anything
+ return nil
 end
 
 -- update the players movement force
-colliding = false
+colliding = nil
 function update_player(a)
   accel={dx=0,dy=0}
   if (btn(0)) then
@@ -317,8 +365,13 @@ function update_player(a)
   -- check for collision with obstacles/powerups?
   local wascolliding = colliding
   colliding = collide()
-  if (colliding and (not wascolliding)) then
-    take_damage()
+  if (colliding and (colliding ~= wascolliding)) then
+    if (colliding.is_innocent) then
+      score += colliding.purity
+      del(actors, colliding)
+    else
+      take_damage()
+    end
   end
 end
 
@@ -424,15 +477,23 @@ function draw_health()
   end
 end
 
+function draw_score()
+  local score_x = 8
+  local score_y = 8
+  local score_color = 7
+  print("purity: "..score, score_x, score_y, score_color)
+end
+
 -- called approximately once per frame.
 function _draw()
   current_level.draw_bg(current_level)
-	
+
   if (colliding) then
     rectfill(0,0,127,127,9)
   end
   foreach(actors,draw_actor)
   draw_health()
+  draw_score()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
