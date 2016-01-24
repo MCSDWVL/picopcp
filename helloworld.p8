@@ -199,8 +199,33 @@ actor_prefabs = {
    end,
  },
  mermaid = {
+   spr_w=2,
+   spr_h=2,
+   frames={22},
+   damping=1,
+   dx=0,
+   dy=-1,
+   frametime=1,
+   w=5,
+   h=5,
+   init = function(a)
+     if(a.x < pl.x) then
+       a.facing_right=true
+     end
+   end,
  },
  fish = {
+    spr_w=1,
+    spr_h=1,
+    frames={75},
+    damping=1,
+    dx=0,
+    dy=-2,
+    frametime=1,
+    w=5,
+    h=5,
+    is_innocent=true,
+    purity = 100,
  },
  shark = {
    spr_w=1,
@@ -209,7 +234,7 @@ actor_prefabs = {
    damping=0,
    dx=0,
    dy=0,
-   frametime=1,
+   frametime=3,
    w=5,
    h=5,
    update = function(a)
@@ -224,6 +249,9 @@ actor_prefabs = {
        -- slowly drift upwards
        a.dy = -0.3
      end
+
+     -- change facing?
+     a.facing_right = a.x < pl.x
    end,
  },
 
@@ -340,8 +368,12 @@ levels = {
     spawns = {
       actor_prefabs.jellyfish,
       actor_prefabs.shark,
+      actor_prefabs.fish,
+      actor_prefabs.mermaid,
     },
-    init = function() end,
+    init = function()
+      pl.swimming = true
+    end,
     update = function() end,
     draw_bg=function()
      rectfill(0,0,127,127,1)
