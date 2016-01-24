@@ -207,9 +207,15 @@ function apply_movement(a)
   a.dy *= a.damping
 
   -- check if npc has moved "off screen"
-  if (a.y<-1 and a ~= pl) then
+  if (is_out_of_bounds(a) and a ~= pl) then
     del(actors,a)
   end
+end
+
+-- Is an actor sufficiently out of the placespace that they need deletion?
+function is_out_of_bounds(a)
+  local tolerance = 10
+  return a.y < -tolerance or a.y > 127+tolerance or a.x < -tolerance or a.y > 127+tolerance
 end
 
 -- countdown to adding an enemy
