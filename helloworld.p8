@@ -7,6 +7,7 @@ actors={}
 player_acceleration = .3
 player_max_speed = 3
 pl = nil
+score = 0
 
 -- other tuning parameters... these might need to split to be per level?
 frames_til_next_enemy = 30
@@ -91,7 +92,6 @@ actor_prefabs = {
     frametime=10,
     w=5,
     h=5,
-    is_innocent=true,
     init = function(a)
       -- randomize horizontal movement
       a.dx = 2 - rnd(4)
@@ -115,7 +115,8 @@ actor_prefabs = {
     dx = 0,
     dy = -1,
     frametime=1,
-    is_innocent=true
+    is_innocent=true,
+    purity=100,
   },
   shooting_star = {
     spr_w=1,
@@ -127,7 +128,16 @@ actor_prefabs = {
     dx = 0,
     dy = -1,
     frametime=1,
-    is_innocent=true
+    is_innocent=true,
+    purity=1000,
+    init = function(a)
+      -- start off the top of the screen
+      a.y = -5
+
+      -- movement down and sideways
+      a.dy = 3
+      a.dx = 4-rnd(8)
+    end,
   },
 
   -- enemies - sky
@@ -141,9 +151,9 @@ actor_prefabs = {
    frametime=1,
    w=5,
    h=5,
-   is_innocent=true
+   is_innocent=true,
+   purity = 100,
  },
-
  -- enemies - ocean
 
   -- special actors
@@ -261,21 +271,22 @@ function draw_actor(a)
 end
 
 function collide()
- for a in all(actors) do
-  if (a ~= pl) then
-  	local x=pl.x - a.x
-  	local y=pl.y - a.y
-  	if ((abs(x) < pl.w+a.w) and
-  	   (abs(y) < pl.h+a.h))
-  	then
-  	 return true
-  	end
+  for a in all(actors) do
+    if (a ~= pl) then
+    	local x=pl.x - a.x
+    	local y=pl.y - a.y
+      if ((abs(x) < pl.w+a.w) and (abs(y) < pl.h+a.h)) then
+        -- Return the actor we collide with so we can decide what to do with it.
+        return a
+      end
+    end
   end
- end
+  -- didn't collide with anything
+  return nil
 end
 
 -- update the players movement force
-colliding = false
+colliding = nil
 function update_player(a)
   accel={dx=0,dy=0}
   if (btn(0)) then
@@ -312,8 +323,13 @@ function update_player(a)
   -- check for collision with obstacles/powerups?
   local wascolliding = colliding
   colliding = collide()
-  if (colliding and (not wascolliding)) then
-    take_damage()
+  if (colliding and (colliding ~= wascolliding)) then
+    if (colliding.is_innocent) then
+      score += colliding.purity
+      del(actors, colliding)
+    else
+      take_damage()
+    end
   end
 end
 
@@ -417,6 +433,13 @@ function draw_health()
   end
 end
 
+function draw_score()
+  local score_x = 8
+  local score_y = 8
+  local score_color = 7
+  print("Purity: "..score, score_x, score_y, score_color)
+end
+
 -- called approximately once per frame.
 function _draw()
   if (colliding) then
@@ -426,6 +449,7 @@ function _draw()
   end
   foreach(actors,draw_actor)
   draw_health()
+  draw_score()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
