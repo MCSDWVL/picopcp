@@ -44,6 +44,10 @@ actor_prefabs = {
     init = function(a)
       local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
       arrow.owner = a
+
+      if(a.x < pl.x) then
+      	a.facing_right=true
+      end
     end,
   },
 
@@ -90,6 +94,7 @@ actor_prefabs = {
         -- stick to the cherub
         a.x = a.owner.x
         a.y = a.owner.y
+        a.facing_right = a.owner.facing_right
       end
     end
   },
@@ -113,6 +118,7 @@ function create_actor(x, y, prefab)
   a.y = y
   a.frame = 0
   a.updates_this_frame = 0
+  a.facing_right = false
 
   -- add to the list of actors and return a reference to it.
   add(actors,a)
@@ -128,7 +134,7 @@ end
 -- draw an actor
 function draw_actor(a)
   if (a.spr >= 0) then
-    spr(a.spr + a.frame, a.x, a.y, a.spr_w, a.spr_h)
+    spr(a.spr + a.frame, a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
   else
     circfill(a.x,a.y,3,spr)
   end
@@ -152,8 +158,14 @@ end
 colliding = false
 function update_player(a)
   accel={dx=0,dy=0}
-  if (btn(0)) then accel.dx-=1 end
-  if (btn(1)) then accel.dx+=1 end
+  if (btn(0)) then
+    accel.dx-=1
+    a.facing_right=false
+  end
+  if (btn(1)) then
+    accel.dx+=1
+    a.facing_right=true
+  end
   if (btn(2)) then accel.dy-=1 end
   if (btn(3)) then accel.dy+=1 end
 
