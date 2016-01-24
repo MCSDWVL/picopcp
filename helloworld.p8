@@ -227,6 +227,34 @@ actor_prefabs = {
     is_innocent=true,
     purity = 100,
  },
+ seaweed = {
+    spr_w=2,
+    spr_h=1,
+    damping=1,
+    dx=0,
+    dy=-2,
+    frametime=3,
+    w=5,
+    h=5,
+    nocollide=true,
+    init = function(a)
+      -- pick between the two seaweed sprites
+      if rnd(1) < .5 then
+        a.frames = {104,106}
+      else
+        a.frames = {120,122}
+      end
+
+      -- pick randomly between left and right side of the screen
+      if rnd(1) < .5 then
+        a.x = 0
+        a.facing_right = false -- seaweed sprite is backwards
+      else
+        a.x = 127 - 15
+        a.facing_right = true -- seaweed sprite is backwards
+      end
+    end
+ },
  shark = {
    spr_w=1,
    spr_h=1,
@@ -319,11 +347,13 @@ levels = {
     rectfill(50,0,77,127,6)
     rect(23,-1,105,128,12)
    end,
-   init = function() end,
+   init = function()
+     pl.frames = {0,1}
+   end,
    update = function() end,
    spawns = {
-    actor_prefabs.cherub
-    }
+     actor_prefabs.cherub
+   }
   },
   space = {
     spawns = {
@@ -335,6 +365,8 @@ levels = {
       actor_prefabs.star,
     },
     init = function()
+      pl.swimming = true
+      pl.frames = {4,5}
      stars={}
     	while #stars < 50 do
     		add(stars, {
@@ -370,15 +402,40 @@ levels = {
       actor_prefabs.shark,
       actor_prefabs.fish,
       actor_prefabs.mermaid,
+      actor_prefabs.seaweed,
     },
     init = function()
       pl.swimming = true
+      pl.frames = {4,5}
+      bubbles={}
+      -- bubbles
+      while #bubbles < 5 do
+        add(bubbles, {
+          x=flr(rnd(127)),
+          y=flr(rnd(127)),
+          v=rnd(2),
+          radius=rnd(3),
+        })
+      end
     end,
-    update = function() end,
-    draw_bg=function()
-     rectfill(0,0,127,127,1)
+    update = function(self)
+      foreach(bubbles,self.update_bubble)
     end,
-  }
+    draw_bg = function(self)
+      rectfill(0,0,127,127,1)
+      foreach(bubbles, self.draw_bubble)
+    end,
+    draw_bubble = function(bubble)
+      circfill(bubble.x, bubble.y, bubble.radius, 13)
+    end,
+    update_bubble = function(bubble)
+      bubble.y-=bubble.v
+      if bubble.y < 0 then
+        bubble.y=128
+        bubble.x=flr(rnd(127))
+      end
+    end,
+  },
 }
 
 current_level = levels.ocean
@@ -427,7 +484,7 @@ end
 
 function collide()
  for a in all(actors) do
-  if (a ~= pl) then
+  if (a ~= pl) and not a.nocollide then
   	if not ((pl.x+pl.w < a.x) or
   	   (a.x+a.w < pl.x) or
   	   (pl.y+pl.h < a.y) or
@@ -456,6 +513,14 @@ function update_player(a)
   end
   if (btn(2)) then accel.dy-=1 end
   if (btn(3)) then accel.dy+=1 end
+
+  if pl.swimming then
+    if btn(2) or btn(3) then
+      pl.frames = {4,5}
+    elseif btn(0) or btn(1) then
+      pl.frames = {2,3}
+    end
+  end
 
   -- normalize the acceleration to the intended move speed
   accel_mag = sqrt(accel.dx*accel.dx + accel.dy*accel.dy)
