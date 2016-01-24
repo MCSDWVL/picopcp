@@ -12,13 +12,22 @@ score = 0
 -- other tuning parameters... these might need to split to be per level?
 frames_til_next_enemy = 30
 
+-- helper to normalize a vector2
+function normalize(x,y,scale)
+  local magnitude = sqrt(x*x+y*y)
+  if not scale then
+    scale = 1
+  end
+  return {x=scale*x/magnitude,y=scale*y/magnitude}
+end
+
 -- table with settings for a given actor
 actor_prefabs = {
   player = {
     spr_w=1,
     spr_h=1,
     frames={0,1},
-    damping=.75,
+    damping=.9,
     dx=0,
     dy=0,
     frametime=5,
@@ -154,9 +163,48 @@ actor_prefabs = {
    is_innocent=true,
    purity = 100,
  },
- -- enemies - ocean
 
-  -- special actors
+ -- enemies - ocean
+ jellyfish = {
+   spr_w=1,
+   spr_h=1,
+   frames={64,65},
+   damping=.89,
+   dx=0,
+   dy=-1,
+   frametime=1,
+   w=5,
+   h=5,
+   is_innocent=true,
+   purity = 100,
+   frames_since_moved = 0,
+   update = function(a)
+     a.frames_since_moved += 1
+     if a.frames_since_moved >= 65 then
+       a.frames_since_moved = 0
+       -- jump towards the player
+       local jelly_speed = 3
+       local toward_player_x = pl.x - a.x
+       local toward_player_y = pl.y - a.y
+       local target_vec = normalize(toward_player_x, toward_player_y, jelly_speed)
+       a.dx = target_vec.x
+       a.dy = target_vec.y
+     end
+
+     -- keep moving up
+     if(a.dy > -1) then
+       a.dy -= 0.1
+     end
+   end,
+ },
+ mermaid = {
+ },
+ fish = {
+ },
+ shark = {
+ },
+
+ -- special actors
   arrow = {
     spr_w=1,
     spr_h=1,
@@ -264,9 +312,20 @@ levels = {
      	star.x=flr(rnd(127))
      end
     end
+  },
+  ocean = {
+    spawns = {
+      actor_prefabs.jellyfish,
+    },
+    init = function() end,
+    update = function() end,
+    draw_bg=function()
+     rectfill(0,0,127,127,1)
+    end,
   }
 }
-current_level = levels.heaven
+
+current_level = levels.ocean
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -796,4 +855,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
