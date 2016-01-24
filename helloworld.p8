@@ -178,6 +178,8 @@ levels = {
     rectfill(50,0,77,127,6)
     rect(23,-1,105,128,12)
    end,
+   init = function() end,
+   update = function() end,
    spawns = {
     actor_prefabs.cherub
     }
@@ -221,7 +223,7 @@ levels = {
     end  	
   }
 }
-current_level = levels.space
+current_level = levels.heaven
 
 -- create a shallow copy of a prefab
 function clone(prefab)
