@@ -47,6 +47,81 @@ actor_prefabs = {
     end,
   },
 
+  -- enemies - space
+  small_meteor = {
+    spr_w=1,
+    spr_h=1,
+    frames={89},
+    damping=1,
+    w=5,
+    h=5,
+    dx=0,
+    dy=-1,
+    frametime=1,
+  },
+  medium_meteor = {
+    spr_w=1,
+    spr_h=1,
+    frames={86},
+    damping=1,
+    w=5,
+    h=5,
+    dx=0,
+    dy=-1,
+    frametime=1,
+  },
+  big_meteor = {
+    spr_w=2,
+    spr_h=2,
+    frames={71},
+    damping=1,
+    w=5,
+    h=5,
+    dx=0,
+    dy=-1,
+    frametime=1,
+  },
+  small_alien = {
+    spr_w=1,
+    spr_h=1,
+    frames={73,74},
+    damping=1,
+    dx=0,
+    dy=-1,
+    frametime=10,
+    w=5,
+    h=5,
+    is_innocent=true,
+    init = function(a)
+      -- randomize horizontal movement
+      a.dx = 1 - rnd(2)
+    end
+  },
+  star = {
+    spr_w=1,
+    spr_h=1,
+    frames={70},
+    damping=1,
+    w=5,
+    h=5,
+    dx = 0,
+    dy = -1,
+    frametime=1,
+    is_innocent=true
+  },
+  shooting_star = {
+    spr_w=1,
+    spr_h=1,
+    frames={9},
+    damping=1,
+    w=5,
+    h=5,
+    dx = 0,
+    dy = -1,
+    frametime=1,
+    is_innocent=true
+  },
+
   -- enemies - sky
   bird = {
    spr_w=1,
@@ -92,6 +167,23 @@ actor_prefabs = {
     end
   },
 }
+
+-- level stuff
+level_time_frames = 60 * 45 -- 60 frames per second, 45 seconds
+levels = {
+  heaven = {},
+  space = {
+    spawns = {
+      actor_prefabs.small_alien,
+      actor_prefabs.small_meteor,
+      actor_prefabs.medium_meteor,
+      actor_prefabs.big_meteor,
+      actor_prefabs.shooting_star
+    },
+    bg = 0,
+  }
+}
+current_level = levels.space
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -205,7 +297,7 @@ function apply_movement(a)
   end
 end
 
--- Is an actor sufficiently out of the placespace that they need deletion?
+-- is an actor sufficiently out of the placespace that they need deletion?
 function is_out_of_bounds(a)
   local tolerance = 10
   return a.y < -tolerance or a.y > 127+tolerance or a.x < -tolerance or a.y > 127+tolerance
@@ -217,7 +309,8 @@ function update_frames_til_next_enemy()
   if (frames_til_next_enemy <= 0) then
     x = flr(rnd(127))
     y = 130
-    create_actor(x, y, actor_prefabs.cherub)
+    actor_prefab = current_level.spawns[flr(1+rnd(#current_level.spawns))]
+    create_actor(x, y, actor_prefab)
     frames_til_next_enemy = 30
   end
 end
@@ -294,14 +387,14 @@ function _draw()
   if (colliding) then
     rectfill(0,0,127,127,9)
   else
-    rectfill(0,0,127,127,12)
+    rectfill(0,0,127,127,current_level.bg)
   end
   foreach(actors,draw_actor)
   draw_health()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
-    print("GAME OVER", 50,50,1)
+    print("game over", 50,50,1)
   end
 end
 
