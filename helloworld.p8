@@ -320,6 +320,15 @@ actor_prefabs = {
     dy=-2,
     is_innocent=true,
     purity = 100,
+    swap_color = 9,
+    init = function(a)
+      swap_color = flr(rnd(15))
+    end,
+    draw = function(a)
+      pal(9, swap_color)
+      spr(a.frames[1+a.frame_idx], a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
+      pal()
+    end
  },
  seaweed = {
     spr_w=2,
@@ -593,7 +602,7 @@ ordered_levels = {
   levels.sky,
   levels.ocean,
 }
-current_level_idx = 1
+current_level_idx = 4
 current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
