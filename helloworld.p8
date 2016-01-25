@@ -174,7 +174,14 @@ actor_prefabs = {
    frames = {80,82},
    spr_w=2,
    spr_h=2,
+   damping=.89,
    frametime = 5,
+   frames_since_moved = 0,
+   init = function(a)
+     if(a.x < pl.x) then
+       a.facing_right=true
+     end
+   end,
    update = function(a)
      -- fire lasers randomly?
      local laser_chance = 0.01
@@ -182,13 +189,39 @@ actor_prefabs = {
      if roll <= laser_chance then
        create_actor(a.x,a.y,actor_prefabs.dragon_fire)
      end
+
+     a.frames_since_moved += 1
+     if a.frames_since_moved >= 65 then
+       a.frames_since_moved = 0
+       -- jump towards the player
+       local jelly_speed = 3
+       local target_vec = normalized_to_player_vector(a,jelly_speed)
+       a.dx = target_vec.x
+       a.dy = target_vec.y
+     end
+
+     -- keep moving up
+     if(a.dy > -1) then
+       a.dy -= 0.1
+     end
+
+     -- face the direction you're moving
+     a.facing_right = a.dx > 0
    end,
  },
  helicopter = {
    frames = {76,78},
    spr_w=2,
    spr_h=2,
+   t = 0,
+   init = function(a)
+     if(a.x < pl.x) then
+       a.facing_right=true
+     end
+   end,
    update = function(a)
+     a.t += 1
+     a.dx = sin(a.t/50)
      -- fire lasers randomly?
      local laser_chance = 0.01
      local roll = rnd(1)
@@ -371,7 +404,7 @@ actor_prefabs = {
     end,
     draw = function(a)
       local exagerate_length = 3
-      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, a.color)
     end,
     w = 1,
     h = 1,
@@ -380,7 +413,7 @@ actor_prefabs = {
 
 -- level stuff
 level_current_frame = 0
-level_time_frames = 2000
+level_time_frames = 1000
 levels = {
   heaven = {
    draw_bg=function()
