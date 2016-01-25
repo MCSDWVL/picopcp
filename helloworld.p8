@@ -167,6 +167,15 @@ actor_prefabs = {
    frames = {80,82},
    spr_w=2,
    spr_h=2,
+   frametime = 5,
+   update = function(a)
+     -- fire lasers randomly?
+     local laser_chance = 0.01
+     local roll = rnd(1)
+     if roll <= laser_chance then
+       create_actor(a.x,a.y,actor_prefabs.dragon_fire)
+     end
+   end,
  },
  helicopter = {
    frames = {76,78},
@@ -186,6 +195,21 @@ actor_prefabs = {
    nocollide = true,
    spr_w=2,
    spr_h=1,
+ },
+ dragon_fire = {
+   frames = {85,90},
+   init = function(a)
+     -- aim towards the player with normalized speed
+     a.dx = pl.x - a.x
+     a.dy = pl.y - a.y
+
+     -- normalized speed
+     local desired_speed = 2
+     local target_vec = normalized_to_player_vector(a,desired_speed)
+     a.dx = target_vec.x
+     a.dy = target_vec.y
+     sfx(sounds.dragon_fire)
+   end,
  },
 
  -- enemies - ocean
@@ -323,7 +347,7 @@ actor_prefabs = {
 
 -- level stuff
 level_current_frame = 0
-level_time_frames = 500
+level_time_frames = 2000
 levels = {
   heaven = {
    draw_bg=function()
