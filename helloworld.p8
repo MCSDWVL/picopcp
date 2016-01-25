@@ -87,6 +87,18 @@ actor_prefabs = {
     end,
   },
 
+  default_prefab = {
+    spr_w=1,
+    spr_h=1,
+    frames={},
+    damping=1,
+    w=5,
+    h=5,
+    dx=0,
+    dy=-1,
+    frametime=1,
+  },
+
   -- enemies - space
   small_meteor = {
     spr_w=1,
@@ -192,6 +204,41 @@ actor_prefabs = {
    h=5,
    is_innocent=true,
    purity = 100,
+ },
+ butterfly = {
+   frames = {68,69},
+   is_innocent=true,
+   purity = 500,
+   update = function(a)
+     butterfly_speed = 2
+     local toward_player = normalized_to_player_vector(a, butterfly_speed)
+     a.dx = -toward_player.x
+     a.dy = -1
+   end,
+ },
+ dragon = {
+   frames = {80,82},
+   spr_w=2,
+   spr_h=2,
+ },
+ helicopter = {
+   frames = {76,78},
+   spr_w=2,
+   spr_h=2,
+ },
+ small_cloud = {
+   frames = {100},
+   nocollide = true,
+ },
+ medium_cloud = {
+   frames = {100},
+   nocollide = true,
+ },
+ large_cloud = {
+   frames = {102},
+   nocollide = true,
+   spr_w=2,
+   spr_h=1,
  },
 
  -- enemies - ocean
@@ -427,6 +474,22 @@ levels = {
      end
     end
   },
+  sky = {
+    spawns = {
+      actor_prefabs.bird,
+      actor_prefabs.dragon,
+      actor_prefabs.helicopter,
+      actor_prefabs.small_cloud,
+      actor_prefabs.medium_cloud,
+      actor_prefabs.large_cloud,
+      actor_prefabs.butterfly,
+    },
+    init = function() end,
+    draw_bg = function(self)
+      rectfill(0,0,127,127,13)
+    end,
+    update = function() end,
+  },
   ocean = {
     spawns = {
       actor_prefabs.jellyfish,
@@ -475,11 +538,11 @@ levels = {
 ordered_levels = {
   levels.heaven,
   levels.space,
-  --levels.sky,
+  levels.sky,
   levels.ocean,
 }
-current_level_idx = 1
-current_level = ordered_levels[1]
+current_level_idx = 3
+current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -490,9 +553,18 @@ function clone(prefab)
   return copy
 end
 
+function default_values(a)
+  for k,v in pairs(actor_prefabs.default_prefab) do
+    if (a[k] == nil) then
+      a[k] = v
+    end
+  end
+end
+
 -- create an actor from a prefab
 function create_actor(x, y, prefab)
   a = clone(prefab)
+  default_values(a)
 
   -- some fields are not initialized from the prefab
   a.x = x
@@ -751,8 +823,6 @@ function _draw()
   foreach(actors,draw_actor)
   draw_health()
   draw_score()
-
-  print(level_time_frames-level_current_frame,50,50,1)
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
