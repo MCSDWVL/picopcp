@@ -188,6 +188,23 @@ actor_prefabs = {
    frames = {76,78},
    spr_w=2,
    spr_h=2,
+   update = function(a)
+     -- fire lasers randomly?
+     local laser_chance = 0.01
+     local roll = rnd(1)
+     if roll <= laser_chance then
+       local dx = -1
+       if a.facing_right then
+         dx = -dx
+       end
+
+       for i=1,3 do
+         local bullet = create_actor(a.x,a.y,actor_prefabs.bullet)
+         bullet.dx = dx
+         bullet.dy = -1 + (i-1)
+       end
+     end
+   end,
  },
  small_cloud = {
    frames = {100},
@@ -329,8 +346,17 @@ actor_prefabs = {
       end
     end
   },
+  bullet = {
+    nowrap = true,
+    color=13,
+    draw = function(a)
+      local exagerate_length = 3
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
+    end,
+  },
   laser = {
     nowrap = true,
+    color=8,
     init = function(a)
       -- aim towards the player with normalized speed
       a.dx = pl.x - a.x
@@ -345,7 +371,7 @@ actor_prefabs = {
     end,
     draw = function(a)
       local exagerate_length = 3
-      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, 8)
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
     end,
     w = 1,
     h = 1,
