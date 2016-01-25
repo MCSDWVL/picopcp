@@ -630,6 +630,7 @@ levels = {
     end,
   },
   hell = {
+   song = songs.hell,
    init = function(self)
     pl.frames={216,217}
     self.demons = {}
@@ -673,7 +674,7 @@ ordered_levels = {
   levels.ocean,
   levels.hell
 }
-current_level_idx = 5
+current_level_idx = 1
 current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
@@ -1282,3 +1283,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
