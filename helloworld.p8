@@ -39,7 +39,7 @@ sounds = {
   pickup = 16,
 }
 
-music = {
+songs = {
   fur_elise = 0,
   star_wars = 1,
   creepy = 11,
@@ -319,6 +319,7 @@ actor_prefabs = {
     frametime=5,
     w=8,
     h=3,
+    nowrap = true,
     update=function(a)
       if (not a.fired and a.y <= pl.y and (pl.x > a.x == a.owner.facing_right)) then
         -- fire!
@@ -343,6 +344,7 @@ actor_prefabs = {
     dy=0,
     frames = {},
     frametime=5,
+    nowrap = true,
     init = function(a)
       -- aim towards the player with normalized speed
       a.dx = pl.x - a.x
@@ -353,7 +355,7 @@ actor_prefabs = {
       local magnitude = sqrt(a.dx*a.dx + a.dy*a.dy)
       a.dx /= magnitude / desired_speed
       a.dy /= magnitude / desired_speed
-      sfx(sounds.laser, -1, flr(1+rnd(5)))
+      sfx(sounds.laser)
     end,
     draw = function(a)
       local exagerate_length = 3
@@ -394,6 +396,7 @@ levels = {
     init = function()
       pl.swimming = true
       pl.frames = {4,5}
+      music(songs.star_wars, 1000, 1)
      stars={}
     	while #stars < 50 do
     		add(stars, {
@@ -595,6 +598,19 @@ function apply_movement(a)
   a.dx *= a.damping
   a.dy *= a.damping
 
+  -- horizontal wrap
+  if not a.nowrap then
+    if(a.x < 0) then a.x += 127 end
+    if(a.x > 127) then a.x -= 127 end
+  end
+
+  -- keep player in bounds
+  if a == pl then
+    if a.y > 122 then a.y = 122
+    elseif a.y < 0 then a.y = 0
+    end
+  end
+
   -- check if npc has moved "off screen"
   if (is_out_of_bounds(a) and a ~= pl) then
     del(actors,a)
@@ -664,6 +680,12 @@ function take_damage()
   camera_shake_remaining_frames = 10
   pl.health -= 1
   sfx(sounds.thunk)
+
+  -- game over
+  if (pl.health == 0) then
+    music(-1)
+    sfx(songs.game_over)
+  end
 end
 
 camera_shake_violence = 5
@@ -709,7 +731,9 @@ function _draw()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
+
     print("game over", 50,50,1)
+
   end
 end
 
@@ -884,7 +908,7 @@ __sfx__
 01130000130500000013050000002b0502b050000002a0502a050280002905028000280502705028050000002005020050250502505025050250002405024050230502305022050210502205022050000001b050
 01120000000001e0501e0501b0001b0501b050000001e0502200022050220501f0001f0501f0501f050260002205022050260502605026050000002b0502b0502b05000000130501300013050000002b0502b050
 011100002a0002a0502a0502900029050280002805027000270502700028050280001f050000002505025050240502e0002205021050220502205022050000002705027050000002a0502a050000002e0502e050
-01100000000001f050000001b0500000022050000001f0501f0501f0501f0501f0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+01100000000001f050000001b0500000022050000001f0501f0501f0501f0501f0501f0501f0501f0501f0501f0411f0401f0401f0401f0311f0301f0301f0301f0211f0201f0201f0201f0201f0111f0101f000
 011000000c6710e6710e6710c6711360115601176010c6010c6010040100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 011600003771439703396033960334603136033560313603376031560439603186033b6030c6033c6031530600000000000000000000000000000000000000000000000000000000000000000000000000000000
 011500001f57318603000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -948,7 +972,7 @@ __music__
 00 02424344
 00 03424344
 00 04424344
-00 05424344
+02 05424344
 00 0b464344
 00 4b424344
 00 41424344
