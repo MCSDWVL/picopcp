@@ -63,7 +63,7 @@ actor_prefabs = {
     dy=0,
     frametime=5,
     w=5,
-    health=3,
+    health=7,
     h=8
   },
 
@@ -603,7 +603,7 @@ ordered_levels = {
   levels.sky,
   levels.ocean,
 }
-current_level_idx = 4
+current_level_idx = 1
 current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
