@@ -40,7 +40,7 @@ sounds = {
   pickup = 16,
 }
 
-music = {
+songs = {
   fur_elise = 0,
   star_wars = 1,
   creepy = 11,
@@ -67,17 +67,26 @@ actor_prefabs = {
     h=8
   },
 
+  -- default values
+  default_prefab = {
+    spr_w=1,
+    spr_h=1,
+    frames={},
+    damping=1,
+    w=5,
+    h=5,
+    dx=0,
+    dy=-1,
+    frametime=1,
+  },
+
   -- enemies - heaven
   cherub = {
     spr_w=2,
     spr_h=2,
     frames={20},
-    damping=1,
-    dx=0,
     dy=-2,
     frametime=5,
-    w=5,
-    h=5,
     init = function(a)
       local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
       arrow.owner = a
@@ -90,48 +99,19 @@ actor_prefabs = {
 
   -- enemies - space
   small_meteor = {
-    spr_w=1,
-    spr_h=1,
     frames={89},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   medium_meteor = {
-    spr_w=1,
-    spr_h=1,
     frames={86},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   big_meteor = {
     spr_w=2,
     spr_h=2,
     frames={71},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   small_alien = {
-    spr_w=1,
-    spr_h=1,
     frames={73,74},
-    damping=1,
-    dx=0,
-    dy=-1,
     frametime=10,
-    w=5,
-    h=5,
     init = function(a)
       -- randomize horizontal movement
       a.dx = 2 - rnd(4)
@@ -146,28 +126,12 @@ actor_prefabs = {
     end
   },
   star = {
-    spr_w=1,
-    spr_h=1,
     frames={70},
-    damping=1,
-    w=5,
-    h=5,
-    dx = 0,
-    dy = -1,
-    frametime=1,
     is_innocent=true,
     purity=100,
   },
   shooting_star = {
-    spr_w=1,
-    spr_h=1,
     frames={9},
-    damping=1,
-    w=5,
-    h=5,
-    dx = 0,
-    dy = -1,
-    frametime=1,
     is_innocent=true,
     purity=1000,
     init = function(a)
@@ -182,30 +146,101 @@ actor_prefabs = {
 
   -- enemies - sky
   bird = {
-   spr_w=1,
-   spr_h=1,
    frames={7,8},
    damping=1,
    dx=0,
    dy=-2,
-   frametime=1,
-   w=5,
-   h=5,
    is_innocent=true,
    purity = 100,
+ },
+ butterfly = {
+   frames = {68,69},
+   is_innocent=true,
+   purity = 500,
+   update = function(a)
+     butterfly_speed = 2
+     local player_distance_sq = ((pl.x-a.x) * (pl.x-a.x) + (pl.y-a.y)*(pl.y-a.y))
+     if player_distance_sq < 500 then
+       local toward_player = normalized_to_player_vector(a, butterfly_speed)
+
+       a.dx = -toward_player.x
+       a.dy = -1
+     else
+       a.dx = 1-rnd(2)
+       a.dy = -.5
+     end
+   end,
+ },
+ dragon = {
+   frames = {80,82},
+   spr_w=2,
+   spr_h=2,
+   frametime = 5,
+   update = function(a)
+     -- fire lasers randomly?
+     local laser_chance = 0.01
+     local roll = rnd(1)
+     if roll <= laser_chance then
+       create_actor(a.x,a.y,actor_prefabs.dragon_fire)
+     end
+   end,
+ },
+ helicopter = {
+   frames = {76,78},
+   spr_w=2,
+   spr_h=2,
+   update = function(a)
+     -- fire lasers randomly?
+     local laser_chance = 0.01
+     local roll = rnd(1)
+     if roll <= laser_chance then
+       local dx = -1
+       if a.facing_right then
+         dx = -dx
+       end
+
+       for i=1,3 do
+         local bullet = create_actor(a.x,a.y,actor_prefabs.bullet)
+         bullet.dx = dx
+         bullet.dy = -1 + (i-1)
+       end
+     end
+   end,
+ },
+ small_cloud = {
+   frames = {100},
+   nocollide = true,
+ },
+ medium_cloud = {
+   frames = {100},
+   nocollide = true,
+ },
+ large_cloud = {
+   frames = {102},
+   nocollide = true,
+   spr_w=2,
+   spr_h=1,
+ },
+ dragon_fire = {
+   frames = {85,90},
+   init = function(a)
+     -- aim towards the player with normalized speed
+     a.dx = pl.x - a.x
+     a.dy = pl.y - a.y
+
+     -- normalized speed
+     local desired_speed = 2
+     local target_vec = normalized_to_player_vector(a,desired_speed)
+     a.dx = target_vec.x
+     a.dy = target_vec.y
+     sfx(sounds.dragon_fire)
+   end,
  },
 
  -- enemies - ocean
  jellyfish = {
-   spr_w=1,
-   spr_h=1,
    frames={64,65},
    damping=.89,
-   dx=0,
-   dy=-1,
-   frametime=1,
-   w=5,
-   h=5,
    frames_since_moved = 0,
    update = function(a)
      a.frames_since_moved += 1
@@ -228,12 +263,6 @@ actor_prefabs = {
    spr_w=2,
    spr_h=2,
    frames={22},
-   damping=1,
-   dx=0,
-   dy=-1,
-   frametime=1,
-   w=5,
-   h=5,
    init = function(a)
      if(a.x < pl.x) then
        a.facing_right=true
@@ -241,27 +270,16 @@ actor_prefabs = {
    end,
  },
  fish = {
-    spr_w=1,
-    spr_h=1,
     frames={75},
-    damping=1,
-    dx=0,
     dy=-2,
-    frametime=1,
-    w=5,
-    h=5,
     is_innocent=true,
     purity = 100,
  },
  seaweed = {
     spr_w=2,
     spr_h=1,
-    damping=1,
-    dx=0,
     dy=-2,
     frametime=3,
-    w=5,
-    h=5,
     nocollide=true,
     init = function(a)
       -- pick between the two seaweed sprites
@@ -282,15 +300,9 @@ actor_prefabs = {
     end
  },
  shark = {
-   spr_w=1,
-   spr_h=1,
    frames={66,67},
    damping=0,
-   dx=0,
-   dy=0,
    frametime=3,
-   w=5,
-   h=5,
    update = function(a)
      -- move towards the player directly
      shark_speed = 1
@@ -311,15 +323,12 @@ actor_prefabs = {
 
  -- special actors
   arrow = {
-    spr_w=1,
-    spr_h=1,
     frames={52},
-    damping=1,
     dx=0,
     dy=0,
-    frametime=5,
     w=8,
     h=3,
+    nowrap = true,
     update=function(a)
       if (not a.fired and a.y <= pl.y and (pl.x > a.x == a.owner.facing_right)) then
         -- fire!
@@ -338,12 +347,17 @@ actor_prefabs = {
       end
     end
   },
+  bullet = {
+    nowrap = true,
+    color=13,
+    draw = function(a)
+      local exagerate_length = 3
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
+    end,
+  },
   laser = {
-    damping=1,
-    dx=0,
-    dy=0,
-    frames = {},
-    frametime=5,
+    nowrap = true,
+    color=8,
     init = function(a)
       -- aim towards the player with normalized speed
       a.dx = pl.x - a.x
@@ -354,11 +368,11 @@ actor_prefabs = {
       local magnitude = sqrt(a.dx*a.dx + a.dy*a.dy)
       a.dx /= magnitude / desired_speed
       a.dy /= magnitude / desired_speed
-      sfx(sounds.laser, -1, flr(1+rnd(5)))
+      sfx(sounds.laser)
     end,
     draw = function(a)
       local exagerate_length = 3
-      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, 8)
+      line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
     end,
     w = 1,
     h = 1,
@@ -366,7 +380,8 @@ actor_prefabs = {
 }
 
 -- level stuff
-level_time_frames = 60 * 45 -- 60 frames per second, 45 seconds
+level_current_frame = 0
+level_time_frames = 200
 levels = {
   heaven = {
    draw_bg=function(self)
@@ -395,15 +410,15 @@ levels = {
       })
      end
     end
-    
+
     pl.frames = {0,1}
    end,
-   update = function(self) 
+   update = function(self)
     foreach(self.tiles, self.update_tile)
    end,
    update_tile = function(tile)
    	if tile.y<-8 then
-   	 tile.y=127 
+   	 tile.y=127
    	end
    	if t%tile.v==0 then
    	 tile.y -= 1
@@ -422,6 +437,9 @@ levels = {
       actor_prefabs.shooting_star,
       actor_prefabs.star,
     },
+
+    song = songs.star_wars,
+
     init = function(self)
      pl.swimming = true
      pl.frames = {4,5}
@@ -462,6 +480,22 @@ levels = {
      	star.x=flr(rnd(127))
      end
     end
+  },
+  sky = {
+    spawns = {
+      actor_prefabs.bird,
+      actor_prefabs.dragon,
+      actor_prefabs.helicopter,
+      actor_prefabs.small_cloud,
+      actor_prefabs.medium_cloud,
+      actor_prefabs.large_cloud,
+      actor_prefabs.butterfly,
+    },
+    init = function() end,
+    draw_bg = function(self)
+      rectfill(0,0,127,127,12)
+    end,
+    update = function() end,
   },
   ocean = {
     spawns = {
@@ -507,7 +541,14 @@ levels = {
     end,
   },
 }
-current_level = levels.heaven
+ordered_levels = {
+  levels.heaven,
+  levels.space,
+  levels.sky,
+  levels.ocean,
+}
+current_level_idx = 1
+current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -518,9 +559,18 @@ function clone(prefab)
   return copy
 end
 
+function default_values(a)
+  for k,v in pairs(actor_prefabs.default_prefab) do
+    if (a[k] == nil) then
+      a[k] = v
+    end
+  end
+end
+
 -- create an actor from a prefab
 function create_actor(x, y, prefab)
   a = clone(prefab)
+  default_values(a)
 
   -- some fields are not initialized from the prefab
   a.x = x
@@ -634,6 +684,19 @@ function apply_movement(a)
   a.dx *= a.damping
   a.dy *= a.damping
 
+  -- horizontal wrap
+  if not a.nowrap then
+    if(a.x < 0) then a.x += 127 end
+    if(a.x > 127) then a.x -= 127 end
+  end
+
+  -- keep player in bounds
+  if a == pl then
+    if a.y > 122 then a.y = 122
+    elseif a.y < 0 then a.y = 0
+    end
+  end
+
   -- check if npc has moved "off screen"
   if (is_out_of_bounds(a) and a ~= pl) then
     del(actors,a)
@@ -665,6 +728,16 @@ function _init()
   current_level.init(current_level)
 end
 
+function advance_level()
+  current_level_idx += 1
+  if current_level_idx > #ordered_levels then
+    return
+  end
+  level_current_frame = 0
+  current_level = ordered_levels[current_level_idx]
+  current_level.init(current_level)
+end
+
 function actor_update(a)
   -- behavior update
   if (a.update ~= nil) then
@@ -684,7 +757,12 @@ end
 
 -- called once every frame
 function _update()
-		current_level.update(current_level)
+  current_level.update(current_level)
+  level_current_frame += 1
+  if level_current_frame > level_time_frames then
+    advance_level()
+  end
+
   -- player movement
   update_player(pl)
 
@@ -706,6 +784,12 @@ function take_damage()
   camera_shake_remaining_frames = 10
   pl.health -= 1
   sfx(sounds.thunk)
+
+  -- game over
+  if (pl.health == 0) then
+    music(-1)
+    sfx(songs.game_over)
+  end
 end
 
 camera_shake_violence = 5
@@ -751,7 +835,9 @@ function _draw()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
+
     print("game over", 50,50,1)
+
   end
 end
 
@@ -926,7 +1012,7 @@ __sfx__
 01130000130500000013050000002b0502b050000002a0502a050280002905028000280502705028050000002005020050250502505025050250002405024050230502305022050210502205022050000001b050
 01120000000001e0501e0501b0001b0501b050000001e0502200022050220501f0001f0501f0501f050260002205022050260502605026050000002b0502b0502b05000000130501300013050000002b0502b050
 011100002a0002a0502a0502900029050280002805027000270502700028050280001f050000002505025050240502e0002205021050220502205022050000002705027050000002a0502a050000002e0502e050
-01100000000001f050000001b0500000022050000001f0501f0501f0501f0501f0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+01100000000001f050000001b0500000022050000001f0501f0501f0501f0501f0501f0501f0501f0501f0501f0411f0401f0401f0401f0311f0301f0301f0301f0211f0201f0201f0201f0201f0111f0101f000
 011000000c6710e6710e6710c6711360115601176010c6010c6010040100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 011600003771439703396033960334603136033560313603376031560439603186033b6030c6033c6031530600000000000000000000000000000000000000000000000000000000000000000000000000000000
 011500001f57318603000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -990,7 +1076,7 @@ __music__
 00 02424344
 00 03424344
 00 04424344
-00 05424344
+02 05424344
 00 0b464344
 00 4b424344
 00 41424344
@@ -1050,4 +1136,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
