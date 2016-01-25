@@ -367,7 +367,8 @@ actor_prefabs = {
 }
 
 -- level stuff
-level_time_frames = 60 * 45 -- 60 frames per second, 45 seconds
+level_current_frame = 0
+level_time_frames = 500
 levels = {
   heaven = {
    draw_bg=function()
@@ -393,10 +394,10 @@ levels = {
       actor_prefabs.shooting_star,
       actor_prefabs.star,
     },
+    song = songs.star_wars,
     init = function()
       pl.swimming = true
       pl.frames = {4,5}
-      music(songs.star_wars, 1000, 1)
      stars={}
     	while #stars < 50 do
     		add(stars, {
@@ -471,7 +472,14 @@ levels = {
   },
 }
 
-current_level = levels.space
+ordered_levels = {
+  levels.heaven,
+  levels.space,
+  --levels.sky,
+  levels.ocean,
+}
+current_level_idx = 1
+current_level = ordered_levels[1]
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -642,6 +650,16 @@ function _init()
   current_level.init()
 end
 
+function advance_level()
+  current_level_idx += 1
+  if current_level_idx > #ordered_levels then
+    return
+  end
+  level_current_frame = 0
+  current_level = ordered_levels[current_level_idx]
+  current_level.init()
+end
+
 function actor_update(a)
   -- behavior update
   if (a.update ~= nil) then
@@ -661,7 +679,12 @@ end
 
 -- called once every frame
 function _update()
-		current_level.update(current_level)
+  current_level.update(current_level)
+  level_current_frame += 1
+  if level_current_frame > level_time_frames then
+    advance_level()
+  end
+
   -- player movement
   update_player(pl)
 
@@ -728,6 +751,8 @@ function _draw()
   foreach(actors,draw_actor)
   draw_health()
   draw_score()
+
+  print(level_time_frames-level_current_frame,50,50,1)
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
