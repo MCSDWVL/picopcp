@@ -66,27 +66,7 @@ actor_prefabs = {
     h=8
   },
 
-  -- enemies - heaven
-  cherub = {
-    spr_w=2,
-    spr_h=2,
-    frames={20},
-    damping=1,
-    dx=0,
-    dy=-2,
-    frametime=5,
-    w=5,
-    h=5,
-    init = function(a)
-      local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
-      arrow.owner = a
-
-      if(a.x < pl.x) then
-      	a.facing_right=true
-      end
-    end,
-  },
-
+  -- default values
   default_prefab = {
     spr_w=1,
     spr_h=1,
@@ -99,50 +79,38 @@ actor_prefabs = {
     frametime=1,
   },
 
+  -- enemies - heaven
+  cherub = {
+    spr_w=2,
+    spr_h=2,
+    frames={20},
+    dy=-2,
+    frametime=5,
+    init = function(a)
+      local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
+      arrow.owner = a
+
+      if(a.x < pl.x) then
+      	a.facing_right=true
+      end
+    end,
+  },
+
   -- enemies - space
   small_meteor = {
-    spr_w=1,
-    spr_h=1,
     frames={89},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   medium_meteor = {
-    spr_w=1,
-    spr_h=1,
     frames={86},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   big_meteor = {
     spr_w=2,
     spr_h=2,
     frames={71},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
   },
   small_alien = {
-    spr_w=1,
-    spr_h=1,
     frames={73,74},
-    damping=1,
-    dx=0,
-    dy=-1,
     frametime=10,
-    w=5,
-    h=5,
     init = function(a)
       -- randomize horizontal movement
       a.dx = 2 - rnd(4)
@@ -157,28 +125,12 @@ actor_prefabs = {
     end
   },
   star = {
-    spr_w=1,
-    spr_h=1,
     frames={70},
-    damping=1,
-    w=5,
-    h=5,
-    dx = 0,
-    dy = -1,
-    frametime=1,
     is_innocent=true,
     purity=100,
   },
   shooting_star = {
-    spr_w=1,
-    spr_h=1,
     frames={9},
-    damping=1,
-    w=5,
-    h=5,
-    dx = 0,
-    dy = -1,
-    frametime=1,
     is_innocent=true,
     purity=1000,
     init = function(a)
@@ -193,15 +145,10 @@ actor_prefabs = {
 
   -- enemies - sky
   bird = {
-   spr_w=1,
-   spr_h=1,
    frames={7,8},
    damping=1,
    dx=0,
    dy=-2,
-   frametime=1,
-   w=5,
-   h=5,
    is_innocent=true,
    purity = 100,
  },
@@ -243,15 +190,8 @@ actor_prefabs = {
 
  -- enemies - ocean
  jellyfish = {
-   spr_w=1,
-   spr_h=1,
    frames={64,65},
    damping=.89,
-   dx=0,
-   dy=-1,
-   frametime=1,
-   w=5,
-   h=5,
    frames_since_moved = 0,
    update = function(a)
      a.frames_since_moved += 1
@@ -274,12 +214,6 @@ actor_prefabs = {
    spr_w=2,
    spr_h=2,
    frames={22},
-   damping=1,
-   dx=0,
-   dy=-1,
-   frametime=1,
-   w=5,
-   h=5,
    init = function(a)
      if(a.x < pl.x) then
        a.facing_right=true
@@ -287,27 +221,16 @@ actor_prefabs = {
    end,
  },
  fish = {
-    spr_w=1,
-    spr_h=1,
     frames={75},
-    damping=1,
-    dx=0,
     dy=-2,
-    frametime=1,
-    w=5,
-    h=5,
     is_innocent=true,
     purity = 100,
  },
  seaweed = {
     spr_w=2,
     spr_h=1,
-    damping=1,
-    dx=0,
     dy=-2,
     frametime=3,
-    w=5,
-    h=5,
     nocollide=true,
     init = function(a)
       -- pick between the two seaweed sprites
@@ -328,15 +251,9 @@ actor_prefabs = {
     end
  },
  shark = {
-   spr_w=1,
-   spr_h=1,
    frames={66,67},
    damping=0,
-   dx=0,
-   dy=0,
    frametime=3,
-   w=5,
-   h=5,
    update = function(a)
      -- move towards the player directly
      shark_speed = 1
@@ -357,13 +274,9 @@ actor_prefabs = {
 
  -- special actors
   arrow = {
-    spr_w=1,
-    spr_h=1,
     frames={52},
-    damping=1,
     dx=0,
     dy=0,
-    frametime=5,
     w=8,
     h=3,
     nowrap = true,
@@ -386,11 +299,6 @@ actor_prefabs = {
     end
   },
   laser = {
-    damping=1,
-    dx=0,
-    dy=0,
-    frames = {},
-    frametime=5,
     nowrap = true,
     init = function(a)
       -- aim towards the player with normalized speed
