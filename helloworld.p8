@@ -361,6 +361,7 @@ actor_prefabs = {
    frames={66,67},
    damping=0,
    frametime=3,
+   hit_sound=sounds.shark_bite,
    update = function(a)
      -- move towards the player directly
      shark_speed = 1
@@ -731,7 +732,7 @@ function update_player(a)
       sfx(sounds.pickup)
       del(actors, colliding)
     else
-      take_damage()
+      take_damage(colliding)
     end
   end
 end
@@ -798,7 +799,7 @@ function on_current_level_changed()
   level_current_frame = 0
   current_level = ordered_levels[current_level_idx]
   current_level.init(current_level)
-  music(current_level.song, 1)
+  music(current_level.song, 1000, 3)
 end
 
 function advance_level()
@@ -848,10 +849,15 @@ function _update()
 end
 
 
-function take_damage()
+function take_damage(source)
   camera_shake_remaining_frames = 10
   pl.health -= 1
-  sfx(sounds.thunk)
+
+  if (source.hit_sound) then
+    sfx(source.hit_sound)
+  else
+    sfx(sounds.thunk)
+  end
 
   -- game over
   if (pl.health == 0) then
@@ -894,7 +900,7 @@ end
 function _draw()
   current_level.draw_bg(current_level)
 
-  if (colliding) then
+  if (colliding and not colliding.is_innocent) then
     rectfill(0,0,127,127,9)
   end
   foreach(actors,draw_actor)
