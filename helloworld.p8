@@ -378,6 +378,9 @@ levels = {
    end,
    init = function(self)
     local tileset={}
+    local shift_times={
+     0,0,1,2,4,8,16,0,0,16,8,4,2,1,0,0
+    }
     for x=16,32 do
      add(tileset, mget(x,0))
     end
@@ -388,7 +391,7 @@ levels = {
        sprite=tileset[j+1],
        x=j*8,
        y=k*8,
-       v=abs(j-7.5)*5
+       v=shift_times[j+1]
       })
      end
     end
@@ -400,9 +403,11 @@ levels = {
    end,
    update_tile = function(tile)
    	if tile.y<-8 then
-   	 tile.y=128 
+   	 tile.y=127 
    	end
-   	tile.y -= tile.v/30
+   	if t%tile.v==0 then
+   	 tile.y -= 1
+   	end
    end,
    spawns = {
      actor_prefabs.cherub
