@@ -158,9 +158,16 @@ actor_prefabs = {
    purity = 500,
    update = function(a)
      butterfly_speed = 2
-     local toward_player = normalized_to_player_vector(a, butterfly_speed)
-     a.dx = -toward_player.x
-     a.dy = -1
+     local player_distance_sq = ((pl.x-a.x) * (pl.x-a.x) + (pl.y-a.y)*(pl.y-a.y))
+     if player_distance_sq < 500 then
+       local toward_player = normalized_to_player_vector(a, butterfly_speed)
+
+       a.dx = -toward_player.x
+       a.dy = -1
+     else
+       a.dx = 1-rnd(2)
+       a.dy = -.5
+     end
    end,
  },
  dragon = {
@@ -418,7 +425,7 @@ levels = {
     },
     init = function() end,
     draw_bg = function(self)
-      rectfill(0,0,127,127,13)
+      rectfill(0,0,127,127,12)
     end,
     update = function() end,
   },
