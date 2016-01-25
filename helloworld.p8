@@ -506,7 +506,7 @@ ordered_levels = {
   levels.sky,
   levels.ocean,
 }
-current_level_idx = 3
+current_level_idx = 1
 current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
