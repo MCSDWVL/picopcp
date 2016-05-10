@@ -1,6 +1,10 @@
 pico-8 cartridge // http://www.pico-8.com
 version 7
 __lua__
+-- fall from grace
+-- a pizza cat production
+-- by barbie, matt, laurel and kevin
+
 actors={}
 
 -- player constants.
