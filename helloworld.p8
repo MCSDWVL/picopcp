@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 5
+version 7
 __lua__
 actors={}
 
@@ -647,12 +647,15 @@ levels = {
     end
    end,
    update = function(self)
+    level_current_frame = 0
    	if pl.y <112 then 
   			pl.dy=2
   		else
   			self.landed = true
   			pl.dy=0
-  			create_actor(58,100,actor_prefabs.relic)
+  			if self.relic == nil then
+  			 self.relic = create_actor(58,100,actor_prefabs.relic)
+  			end
   		end
    end,
    draw_bg = function(self)
