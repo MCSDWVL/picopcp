@@ -473,17 +473,12 @@ actor_prefabs = {
    dx=0,
    dy=0,
    nocollide=true,
-   --update=function(self)
-   -- if t%10 == 0 then
-   --		if self.up then
-   --			self.y -= 1
-   --			self.up = false
-   --		else
-   --			self.y += 1
-   --			self.up = true
-   -- 	end
-   -- end
-   --end
+   init = function(self)
+     self.start_x = self.x
+   end,
+   update = function(self)
+     self.x = self.start_x + 3*sin(time())
+   end,
   }
 }
 
@@ -654,12 +649,18 @@ levels = {
   hell = {
    song = songs.hell,
    init = function(self)
+   foreach(actors, function(actor)
+      if(actor ~= pl) then
+       del(actors, actor)
+      end
+    end)
     pl.frames={216,217}
     self.demons = {}
     pl_control = false
     pl.x=58
     pl.y=-10
     pl.dy=2
+    pl.dx=0
 
     for j=0,15 do
     	if (j < 5 or j >10) then
@@ -715,7 +716,7 @@ ordered_levels = {
   levels.ocean,
   levels.hell
 }
-current_level_idx = 1
+current_level_idx = 4
 current_level = ordered_levels[current_level_idx]
 
 -- create a shallow copy of a prefab
