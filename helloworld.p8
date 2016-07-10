@@ -642,7 +642,7 @@ levels = {
     pl.x=58
     pl.y=-10
     pl.dy=2
-    
+
     for j=0,15 do
     	if (j < 5 or j >10) then
     	create_actor(j*8,14*8,
@@ -652,7 +652,7 @@ levels = {
    end,
    update = function(self)
     level_current_frame = 0
-   	if pl.y <112 then 
+   	if pl.y <112 then
   			pl.dy=2
   		else
   			self.landed = true
@@ -776,7 +776,7 @@ function update_player(a)
     end
  	 end
   end
-  
+
 
   -- normalize the acceleration to the intended move speed
   accel_mag = sqrt(accel.dx*accel.dx + accel.dy*accel.dy)
@@ -958,11 +958,17 @@ function camera_shake_update()
   end
 end
 
+function draw_hud()
+  rectfill(0,0,127,8,2)
+  draw_health()
+  draw_score()
+end
+
 function draw_health()
   local heart_frame = 84
   local heart_width = 8
   local heart_x = 127-8
-  local heart_y = 8
+  local heart_y = 2
   for i=1,pl.health do
     spr(heart_frame, heart_x, heart_y)
     heart_x -= heart_width
@@ -971,7 +977,7 @@ end
 
 function draw_score()
   local score_x = 8
-  local score_y = 8
+  local score_y = 2
   local score_color = 7
   print("purity: "..score, score_x, score_y, score_color)
 end
@@ -984,8 +990,7 @@ function _draw()
     rectfill(0,0,127,127,9)
   end
   foreach(actors,draw_actor)
-  draw_health()
-  draw_score()
+  draw_hud()
 
   if (pl.health <= 0) then
     rectfill(0,0,127,127,0)
@@ -1290,4 +1295,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
