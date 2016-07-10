@@ -87,22 +87,32 @@ actor_prefabs = {
     frametime=1,
   },
 
+  debug_prefab = {
+    spr_w=2,
+    spr_h=1,
+    frames={10},
+    w=16,
+    dy=0,
+  },
+
   -- enemies - heaven
   rainbow = {
     spr_w=2,
     spr_h=1,
     frames={10},
+    w=16,
     is_innocent = true,
     purity = 250,
     init = function(a)
       -- create a cloud infront and slightly down
       create_actor(a.x, a.y+5, actor_prefabs.large_cloud)
     end,
-    w=8,
   },
   cherub = {
     spr_w=2,
     spr_h=2,
+    w=16,
+    h=16,
     frames={20},
     dy=-2,
     frametime=5,
@@ -127,6 +137,8 @@ actor_prefabs = {
     spr_w=2,
     spr_h=2,
     frames={71},
+    w=16,
+    h=16,
   },
   small_alien = {
     frames={73,74},
@@ -194,6 +206,8 @@ actor_prefabs = {
    frames = {80,82},
    spr_w=2,
    spr_h=2,
+   w=16,
+   h=16,
    damping=.89,
    frametime = 5,
    frames_since_moved = 0,
@@ -233,6 +247,8 @@ actor_prefabs = {
    frames = {76,78},
    spr_w=2,
    spr_h=2,
+   w=16,
+   h=12,
    t = 0,
    init = function(a)
      if(a.x < pl.x) then
@@ -315,6 +331,8 @@ actor_prefabs = {
  mermaid = {
    spr_w=2,
    spr_h=2,
+   w=16,
+   h=16,
    frames={22,24},
    frametime=2,
    init = function(a)
@@ -672,7 +690,23 @@ levels = {
     end
    end,
    spawns = {}
-  }
+ },
+ -- debug = {
+ --   init = function(self)
+ --     self.a = create_actor(64, 64, actor_prefabs.debug_prefab)
+ --   end,
+ --   song = 5,
+ --   draw_bg = function(self)
+ --     cls()
+ --     color(7)
+ --     print(self.a.x + self.a.w, 5, 20)
+ --     print(pl.x, 5, 30)
+ --     print(self.a.x, 30, 20)
+ --     print(self.a.w, 50, 20)
+ --   end,
+ --   update = function() end,
+ --   spawns = {},
+ -- },
 }
 ordered_levels = {
   levels.heaven,
@@ -738,10 +772,10 @@ end
 function collide()
  for a in all(actors) do
   if (a ~= pl) and not a.nocollide then
-  	if not ((pl.x+pl.w < a.x) or
-  	   (a.x+a.w < pl.x) or
-  	   (pl.y+pl.h < a.y) or
-  	   (a.y+a.h < pl.y))
+    if ((pl.x + pl.w > a.x) and
+        (a.x+a.w > pl.x) and
+        (pl.y+pl.h > a.y) and
+        (a.y+a.h > pl.y))
   	then
       -- return the actor we collide with so we can decide what to do with it.
     return a
