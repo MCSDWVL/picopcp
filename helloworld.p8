@@ -102,7 +102,7 @@ actor_prefabs = {
     frames={10},
     w=16,
     is_innocent = true,
-    purity = 250,
+    purity = 50,
     init = function(a)
       -- create a cloud infront and slightly down
       create_actor(a.x, a.y+5, actor_prefabs.large_cloud)
@@ -737,7 +737,8 @@ scenes = {
   },
   game = {
     init = function()
-      pl = create_actor(70, 90, actor_prefabs.player)
+      pl = create_actor(64, 0, actor_prefabs.player)
+      pl.dy = 10
       on_current_level_changed()
     end,
     update = function()
