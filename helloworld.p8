@@ -716,8 +716,72 @@ ordered_levels = {
   levels.ocean,
   levels.hell
 }
-current_level_idx = 4
+current_level_idx = 1
 current_level = ordered_levels[current_level_idx]
+
+-- scene management
+
+scenes = {
+  title = {
+    init = function() end,
+    update = function()
+      if btn(4) then
+        change_scene(scenes.game)
+      end
+    end,
+    draw = function()
+      cls()
+      print("fall from grace")
+    end,
+    name="title",
+  },
+  game = {
+    init = function()
+      pl = create_actor(70, 90, actor_prefabs.player)
+      on_current_level_changed()
+    end,
+    update = function()
+      current_level.update(current_level)
+      level_current_frame += 1
+      if level_current_frame > level_time_frames then
+        advance_level()
+      end
+      -- player movement
+      update_player(pl)
+      -- apply all the forces
+      foreach(actors,actor_update)
+      -- check for adding enemies
+      update_frames_til_next_enemy()
+      -- camera shake
+      camera_shake_update()
+    end,
+    draw = function()
+      current_level.draw_bg(current_level)
+
+      if (colliding and not colliding.is_innocent) then
+        rectfill(0,0,127,127,9)
+      end
+      foreach(actors,draw_actor)
+      draw_hud()
+    end,
+    name="game"
+  },
+  game_over = {
+    init = function()
+      camera()
+      music(-1)
+      sfx(songs.game_over)
+    end,
+    update = function() end,
+    draw = function()
+      rectfill(0,0,127,127,0)
+      print("game over", 50,50,1)
+    end,
+    name = "game over"
+  }
+}
+
+current_scene = scenes.title
 
 -- create a shallow copy of a prefab
 function clone(prefab)
@@ -900,11 +964,7 @@ end
 
 -- called once at the start on run
 function _init()
-  -- create the player
-  pl = create_actor(70, 90, actor_prefabs.player)
-
-  -- advance to the first level.
-  on_current_level_changed()
+  current_scene.init()
 end
 
 function on_current_level_changed()
@@ -941,28 +1001,15 @@ end
 
 -- called once every frame
 function _update()
-  current_level.update(current_level)
-  level_current_frame += 1
-  if level_current_frame > level_time_frames then
-    advance_level()
-  end
-
-  -- player movement
-  update_player(pl)
-
-  -- apply all the forces
-  foreach(actors,actor_update)
-
-  -- check for adding enemies
-  update_frames_til_next_enemy()
-
-  -- camera shake
-  camera_shake_update()
-
-  --increment time
+  current_scene.update()
   t+=1
 end
 
+function change_scene(scene)
+  current_scene = scene
+  scene.init()
+  cls()
+end
 
 function take_damage(source)
   camera_shake_remaining_frames = 10
@@ -976,8 +1023,7 @@ function take_damage(source)
 
   -- game over
   if (pl.health == 0) then
-    music(-1)
-    sfx(songs.game_over)
+    change_scene(scenes.game_over)
   end
 end
 
@@ -1019,20 +1065,7 @@ end
 
 -- called approximately once per frame.
 function _draw()
-  current_level.draw_bg(current_level)
-
-  if (colliding and not colliding.is_innocent) then
-    rectfill(0,0,127,127,9)
-  end
-  foreach(actors,draw_actor)
-  draw_hud()
-
-  if (pl.health <= 0) then
-    rectfill(0,0,127,127,0)
-
-    print("game over", 50,50,1)
-
-  end
+  current_scene.draw()
 end
 
 __gfx__
