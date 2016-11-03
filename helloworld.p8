@@ -888,7 +888,7 @@ function apply_movement(a)
   -- keep player in bounds
   if a == pl then
     if a.y > 122 then a.y = 122
-    elseif a.y < 0 then a.y = 0
+    elseif a.y < 9 then a.y = 9
     end
   end
 
