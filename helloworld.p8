@@ -59,132 +59,163 @@ songs = {
   ascent = 5,
 }
 
--- table with settings for a given actor
-actor_prefabs = {
-  player = {
-    spr_w=1,
-    spr_h=1,
-    frames={0,1},
-    damping=.9,
-    dx=0,
-    dy=0,
-    frametime=5,
-    w=5,
-    health=7,
-    h=8
-  },
+actor = {
+  spr_w=1,
+  spr_h=1,
+  frames={},
+  damping=1,
+  w=5,
+  h=5,
+  dx=0,
+  dy=-1,
+  frametime=1,
+}
+function actor:new(attrs)
+  attrs = attrs or {}
+  attrs._super = self
+  return setmetatable(attrs,{__index=self})
+end
 
-  -- default values
-  default_prefab = {
-    spr_w=1,
-    spr_h=1,
-    frames={},
-    damping=1,
-    w=5,
-    h=5,
-    dx=0,
-    dy=-1,
-    frametime=1,
-  },
+jonathan = actor:new({
+  spr_w=1,
+  spr_h=1,
+  frames={0,1},
+  damping=.9,
+  dx=0,
+  dy=0,
+  frametime=5,
+  w=5,
+  health=7,
+  h=8
+})
 
-  debug_prefab = {
-    spr_w=2,
-    spr_h=1,
-    frames={10},
-    w=16,
-    dy=0,
-  },
+debug = actor:new({
+  spr_w=2,
+  spr_h=1,
+  frames={10},
+  w=16,
+  dy=0,
+})
 
-  -- enemies - heaven
-  rainbow = {
-    spr_w=2,
-    spr_h=1,
-    frames={10},
-    w=16,
-    is_innocent = true,
-    purity = 50,
-    init = function(a)
-      -- create a cloud infront and slightly down
-      create_actor(a.x, a.y+5, actor_prefabs.large_cloud)
-    end,
-  },
-  cherub = {
-    spr_w=2,
-    spr_h=2,
-    w=16,
-    h=16,
-    frames={20},
-    dy=-2,
-    frametime=5,
-    init = function(a)
-      local arrow = create_actor(a.x, a.y, actor_prefabs.arrow)
-      arrow.owner = a
+rainbow = actor:new({
+  spr_w=2,
+  spr_h=1,
+  frames={10},
+  w=16,
+  is_innocent = true,
+  purity = 50,
+  init = function(a)
+    -- create a cloud infront and slightly down
+    create_actor(a.x, a.y+5, large_cloud)
+  end,
+})
 
-      if(a.x < pl.x) then
-      	a.facing_right=true
-      end
-    end,
-  },
+large_cloud = actor:new({
+  frames = {102},
+  nocollide = true,
+  spr_w=2,
+  spr_h=1,
+})
 
-  -- enemies - space
-  small_meteor = {
-    frames={89},
-  },
-  medium_meteor = {
-    frames={86},
-  },
-  big_meteor = {
-    spr_w=2,
-    spr_h=2,
-    frames={71},
-    w=16,
-    h=16,
-  },
-  small_alien = {
-    frames={73,74},
-    frametime=10,
-    init = function(a)
-      -- randomize horizontal movement
-      a.dx = 2 - rnd(4)
-    end,
-    update = function(a)
-      -- fire lasers randomly?
-      local laser_chance = 0.01
-      local roll = rnd(1)
-      if roll <= laser_chance then
-        create_actor(a.x,a.y,actor_prefabs.laser)
-      end
+cherub = actor:new({
+  spr_w=2,
+  spr_h=2,
+  w=16,
+  h=16,
+  frames={20},
+  dy=-2,
+  frametime=5,
+  init = function(a)
+    local arrow = create_actor(a.x, a.y, arrow)
+    arrow.owner = a
+
+    if(a.x < pl.x) then
+      a.facing_right=true
     end
-  },
-  star = {
-    frames={70},
-    is_innocent=true,
-    purity=100,
-  },
-  shooting_star = {
-    frames={9},
-    is_innocent=true,
-    purity=1000,
-    init = function(a)
-      -- start off the top of the screen
-      a.y = -5
+  end,
+})
 
-      -- movement down and sideways
-      a.dy = 3
-      a.dx = 4-rnd(8)
-    end,
-  },
+arrow = actor:new({
+  frames={52},
+  dx=0,
+  dy=0,
+  w=8,
+  h=3,
+  nowrap = true,
+  update=function(a)
+    if (not a.fired and a.y <= pl.y and (pl.x > a.x == a.owner.facing_right)) then
+      -- fire!
+      sfx(sounds.cupid_arrow)
+      a.fired = true
+      if (pl.x < a.x) then
+        a.dx = -1
+      else
+        a.dx = 1
+      end
+    elseif (not a.fired) then
+      -- stick to the cherub
+      a.x = a.owner.x
+      a.y = a.owner.y+6
+      a.facing_right = a.owner.facing_right
+    end
+  end
+})
 
-  -- enemies - sky
-  bird = {
+-- enemies - space
+small_meteor = actor:new({frames={89}})
+medium_meteor = actor:new({frames={86}})
+big_meteor = actor:new({
+  spr_w=2,
+  spr_h=2,
+  frames={71},
+  w=16,
+  h=16,
+})
+small_alien = actor:new({
+  frames={73,74},
+  frametime=10,
+  init = function(a)
+    -- randomize horizontal movement
+    a.dx = 2 - rnd(4)
+  end,
+  update = function(a)
+    -- fire lasers randomly?
+    local laser_chance = 0.01
+    local roll = rnd(1)
+    if roll <= laser_chance then
+      create_actor(a.x,a.y,laser)
+    end
+  end
+})
+star = actor:new({
+  frames={70},
+  is_innocent=true,
+  purity=100,
+})
+shooting_star = actor:new({
+  frames={9},
+  is_innocent=true,
+  purity=1000,
+  init = function(a)
+    -- start off the top of the screen
+    a.y = -5
+
+    -- movement down and sideways
+    a.dy = 3
+    a.dx = 4-rnd(8)
+  end,
+})
+
+-- enemies - sky
+  bird = actor:new({
    frames={7,8},
    damping=1,
    dx=0,
    dy=-2,
    is_innocent=true,
    purity = 100,
- },
- butterfly = {
+ })
+ butterfly = actor:new({
    frames = {68,69},
    is_innocent=true,
    purity = 500,
@@ -201,8 +232,8 @@ actor_prefabs = {
        a.dy = -.5
      end
    end,
- },
- dragon = {
+ })
+ dragon = actor:new({
    frames = {80,82},
    spr_w=2,
    spr_h=2,
@@ -221,7 +252,7 @@ actor_prefabs = {
      local laser_chance = 0.01
      local roll = rnd(1)
      if roll <= laser_chance then
-       create_actor(a.x,a.y,actor_prefabs.dragon_fire)
+       create_actor(a.x,a.y,dragon_fire)
      end
 
      a.frames_since_moved += 1
@@ -242,8 +273,8 @@ actor_prefabs = {
      -- face the direction you're moving
      a.facing_right = a.dx > 0
    end,
- },
- helicopter = {
+ })
+ helicopter = actor:new({
    frames = {76,78},
    spr_w=2,
    spr_h=2,
@@ -268,28 +299,22 @@ actor_prefabs = {
        end
 
        for i=1,3 do
-         local bullet = create_actor(a.x,a.y,actor_prefabs.bullet)
+         local bullet = create_actor(a.x,a.y,bullet)
          bullet.dx = dx
          bullet.dy = -1 + (i-1)
        end
      end
    end,
- },
- small_cloud = {
+ })
+ small_cloud = actor:new({
    frames = {100},
    nocollide = true,
- },
- medium_cloud = {
+ })
+ medium_cloud = actor:new({
    frames = {100},
    nocollide = true,
- },
- large_cloud = {
-   frames = {102},
-   nocollide = true,
-   spr_w=2,
-   spr_h=1,
- },
- dragon_fire = {
+ })
+ dragon_fire = actor:new({
    frames = {85,90},
    nowrap = true,
    init = function(a)
@@ -304,10 +329,10 @@ actor_prefabs = {
      a.dy = target_vec.y
      sfx(sounds.dragon_fire)
    end,
- },
+ })
 
  -- enemies - ocean
- jellyfish = {
+ jellyfish = actor:new({
    frames={64,65},
    damping=.89,
    frames_since_moved = 0,
@@ -327,8 +352,8 @@ actor_prefabs = {
        a.dy -= 0.1
      end
    end,
- },
- mermaid = {
+ })
+ mermaid = actor:new({
    spr_w=2,
    spr_h=2,
    w=16,
@@ -340,8 +365,8 @@ actor_prefabs = {
        a.facing_right=true
      end
    end,
- },
- fish = {
+ })
+ fish = actor:new({
     frames={75},
     dy=-2,
     is_innocent=true,
@@ -355,8 +380,8 @@ actor_prefabs = {
       spr(a.frames[1+a.frame_idx], a.x, a.y, a.spr_w, a.spr_h, a.facing_right)
       pal()
     end
- },
- seaweed = {
+ })
+ seaweed = actor:new({
     spr_w=2,
     spr_h=1,
     dy=-2,
@@ -379,8 +404,8 @@ actor_prefabs = {
         a.facing_right = true -- seaweed sprite is backwards
       end
     end
- },
- shark = {
+ })
+ shark = actor:new({
    frames={66,67},
    damping=0,
    frametime=3,
@@ -401,43 +426,18 @@ actor_prefabs = {
      -- change facing?
      a.facing_right = a.x < pl.x
    end,
- },
+ })
 
  -- special actors
-  arrow = {
-    frames={52},
-    dx=0,
-    dy=0,
-    w=8,
-    h=3,
-    nowrap = true,
-    update=function(a)
-      if (not a.fired and a.y <= pl.y and (pl.x > a.x == a.owner.facing_right)) then
-        -- fire!
-        sfx(sounds.cupid_arrow)
-        a.fired = true
-        if (pl.x < a.x) then
-          a.dx = -1
-        else
-          a.dx = 1
-        end
-      elseif (not a.fired) then
-        -- stick to the cherub
-        a.x = a.owner.x
-        a.y = a.owner.y+6
-        a.facing_right = a.owner.facing_right
-      end
-    end
-  },
-  bullet = {
+  bullet = actor:new({
     nowrap = true,
     color=13,
     draw = function(a)
       local exagerate_length = 3
       line(a.x, a.y, a.x+exagerate_length*a.dx, a.y+exagerate_length*a.dy, color)
     end,
-  },
-  laser = {
+  })
+  laser = actor:new({
     nowrap = true,
     color=8,
     init = function(a)
@@ -458,8 +458,8 @@ actor_prefabs = {
     end,
     w = 1,
     h = 1,
-  },
-  demon = {
+  })
+  demon = actor:new({
    frames={216,217},
    frametime=10,
    dx=0,
@@ -467,8 +467,8 @@ actor_prefabs = {
    nocollide=true,
    update=function(self)
    end,
-  },
-  relic = {
+ })
+  relic = actor:new({
    frames={6},
    dx=0,
    dy=0,
@@ -479,8 +479,7 @@ actor_prefabs = {
    update = function(self)
      self.x = self.start_x + 3*sin(time())
    end,
-  }
-}
+ })
 
 -- level stuff
 level_current_frame = 0
@@ -528,18 +527,18 @@ levels = {
    	end
    end,
    spawns = {
-     actor_prefabs.cherub,
-     actor_prefabs.rainbow,
+     cherub,
+     rainbow,
    }
   },
   space = {
     spawns = {
-      actor_prefabs.small_alien,
-      actor_prefabs.small_meteor,
-      actor_prefabs.medium_meteor,
-      actor_prefabs.big_meteor,
-      actor_prefabs.shooting_star,
-      actor_prefabs.star,
+      small_alien,
+      small_meteor,
+      medium_meteor,
+      big_meteor,
+      shooting_star,
+      star,
     },
 
     song = songs.star_wars,
@@ -588,13 +587,13 @@ levels = {
   sky = {
     song = songs.sky,
     spawns = {
-      actor_prefabs.bird,
-      actor_prefabs.dragon,
-      actor_prefabs.helicopter,
-      actor_prefabs.small_cloud,
-      actor_prefabs.medium_cloud,
-      actor_prefabs.large_cloud,
-      actor_prefabs.butterfly,
+      bird,
+      dragon,
+      helicopter,
+      small_cloud,
+      medium_cloud,
+      large_cloud,
+      butterfly,
     },
     init = function() end,
     draw_bg = function(self)
@@ -605,11 +604,11 @@ levels = {
   ocean = {
     song = songs.ocean,
     spawns = {
-      actor_prefabs.jellyfish,
-      actor_prefabs.shark,
-      actor_prefabs.fish,
-      actor_prefabs.mermaid,
-      actor_prefabs.seaweed,
+      jellyfish,
+      shark,
+      fish,
+      mermaid,
+      seaweed,
     },
     init = function(self)
       pl.swimming = true
@@ -665,7 +664,7 @@ levels = {
     for j=0,15 do
     	if (j < 5 or j >10) then
     	create_actor(j*8,14*8,
-    	actor_prefabs.demon)
+    	demon)
     	end
     end
    end,
@@ -677,7 +676,7 @@ levels = {
   			self.landed = true
   			pl.dy=0
   			if self.relic == nil then
-  			 self.relic = create_actor(58,100,actor_prefabs.relic)
+  			 self.relic = create_actor(58,100,relic)
   			end
   		end
    end,
@@ -692,22 +691,6 @@ levels = {
    end,
    spawns = {}
  },
- -- debug = {
- --   init = function(self)
- --     self.a = create_actor(64, 64, actor_prefabs.debug_prefab)
- --   end,
- --   song = 5,
- --   draw_bg = function(self)
- --     cls()
- --     color(7)
- --     print(self.a.x + self.a.w, 5, 20)
- --     print(pl.x, 5, 30)
- --     print(self.a.x, 30, 20)
- --     print(self.a.w, 50, 20)
- --   end,
- --   update = function() end,
- --   spawns = {},
- -- },
 }
 ordered_levels = {
   levels.heaven,
@@ -737,7 +720,7 @@ scenes = {
   },
   game = {
     init = function()
-      pl = create_actor(64, 0, actor_prefabs.player)
+      pl = create_actor(64, 0, jonathan)
       pl.dy = 10
       on_current_level_changed()
     end,
@@ -784,35 +767,10 @@ scenes = {
 
 current_scene = scenes.title
 
--- create a shallow copy of a prefab
-function clone(prefab)
-  local copy = {}
-  for k,v in pairs(prefab) do
-    copy[k] = v
-  end
-  return copy
-end
-
-function default_values(a)
-  for k,v in pairs(actor_prefabs.default_prefab) do
-    if (a[k] == nil) then
-      a[k] = v
-    end
-  end
-end
 
 -- create an actor from a prefab
 function create_actor(x, y, prefab)
-  a = clone(prefab)
-  default_values(a)
-
-  -- some fields are not initialized from the prefab
-  a.x = x
-  a.y = y
-  a.frame_idx = 0
-  a.updates_this_frame = 0
-  a.facing_right = false
-
+  local a = prefab:new({x=x,y=y,frame_idx=0,updates_this_frame=0,facing_right=false})
   -- add to the list of actors and return a reference to it.
   add(actors,a)
 
