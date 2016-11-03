@@ -715,6 +715,7 @@ scenes = {
     draw = function()
       cls()
       print("fall from grace")
+      print("press z")
     end,
     name="title",
   },
